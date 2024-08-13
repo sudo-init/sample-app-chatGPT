@@ -861,3 +861,4 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+app.run()
