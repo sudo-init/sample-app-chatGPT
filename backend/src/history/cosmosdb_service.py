@@ -181,3 +181,32 @@ class CosmosConversationClient():
 
         return messages
 
+
+    def init_cosmosdb_client():
+        cosmos_conversation_client = None
+        if app_settings.chat_history:
+            try:
+                cosmos_endpoint = (
+                    f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
+                )
+
+                if not app_settings.chat_history.account_key:
+                    credential = DefaultAzureCredential()
+                else:
+                    credential = app_settings.chat_history.account_key
+
+                cosmos_conversation_client = CosmosConversationClient(
+                    cosmosdb_endpoint=cosmos_endpoint,
+                    credential=credential,
+                    database_name=app_settings.chat_history.database,
+                    container_name=app_settings.chat_history.conversations_container,
+                    enable_message_feedback=app_settings.chat_history.enable_feedback,
+                )
+            except Exception as e:
+                logging.exception("Exception in CosmosDB initialization", e)
+                cosmos_conversation_client = None
+                raise e
+        else:
+            logging.debug("CosmosDB not configured")
+
+        return cosmos_conversation_client
