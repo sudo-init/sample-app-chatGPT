@@ -1,5 +1,16 @@
 
 .env*
+.env.sample
+
+.venv
+frontend/node_modules
+.env
+# static
+.azure/
+__pycache__/
+.ipynb_checkpoints/
+
+.env*
 
 .venv
 frontend/node_modules
