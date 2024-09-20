@@ -42,7 +42,6 @@ class App:
         
         self.app.register_blueprint(self.blueprint)
         self.app.register_blueprint(conversation_controller.blueprint)
-        
         self.app.config["TEMPLATES_AUTO_RELOAD"] = True
         
         # logger
