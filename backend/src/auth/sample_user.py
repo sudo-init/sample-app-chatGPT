@@ -29,9 +29,15 @@ sample_user = {
   "X-Forwarded-Proto": "https",
   "X-Forwarded-Tlsversion": "1.2",
   "X-Ms-Client-Principal": "your_base_64_encoded_token",
-  "X-Ms-Client-Principal-Id": "00000000-0000-0000-0000-000000000000",
+  # "X-Ms-Client-Principal-Id": "00000000-0000-0000-0000-000000000000",
+  # "X-Ms-Client-Principal-Idp": "aad",
+  # "X-Ms-Client-Principal-Name": "testusername@constoso.com",
+  
+  "X-Ms-Client-Principal-Id": "73b6f4e8-5f96-4f3e-8e7b-6f45a5aeb22e",
   "X-Ms-Client-Principal-Idp": "aad",
-  "X-Ms-Client-Principal-Name": "testusername@constoso.com",
+  "X-Ms-Client-Principal-Name": "kem5051@gpt.dongwon.com",
+  
+  
   "X-Ms-Token-Aad-Id-Token": "your_aad_id_token",
   "X-Original-Url": "/chatgpt",
   "X-Site-Deployment-Id": "your_app_service",

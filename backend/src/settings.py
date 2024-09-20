@@ -738,3 +738,7 @@ class _AppSettings(BaseModel):
 
 
 app_settings = _AppSettings()
+
+
+# Enable Microsoft Defender for Cloud Integration
+MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"

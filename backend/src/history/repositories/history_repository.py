@@ -1,34 +1,70 @@
+import json
 import uuid
+
+
+
 from datetime import datetime
-from azure.cosmos.aio import CosmosClient
-from azure.cosmos import exceptions
+from logging import getLogger
+
+from backend.src.history.infrastructure.async_cosmosdb_client_factory import AsyncCosmosDBClientFactory
+from backend.src.history.infrastructure.cosmosdb import CosmosDB
+from backend.src.utils.logger import get_main_logger_name
+
+
   
-class CosmosConversationClient():
+# class CosmosConversationClient():
+class HistoryRepository:
     
-    def __init__(self, cosmosdb_endpoint: str, credential: any, database_name: str, container_name: str, enable_message_feedback: bool = False):
-        self.cosmosdb_endpoint = cosmosdb_endpoint
-        self.credential = credential
+    def __init__(
+        self, 
+        cosmosdb_endpoint: str, 
+        # credential: any, 
+        database_name: str, 
+        container_name: str, 
+        cosmosdb_factory: AsyncCosmosDBClientFactory,
+        enable_message_feedback: bool = False,
+    ):
+        self.logger = getLogger(f"{get_main_logger_name()}.history.repository")
+        # clients = self.init_cosmosdb_client(
+        #                 cosmosdb_endpoint, 
+        #                 credential, 
+        #                 database_name, 
+        #                 container_name, 
+        #                 enable_message_feedback
+        #             )
+        # self.cosmosdb_client = clients[0]
+        # self.database_client = clients[1]
+        # self.container_client = clients[2]
+        
         self.database_name = database_name
+        self.cosmosdb_endpoint = cosmosdb_endpoint
         self.container_name = container_name
         self.enable_message_feedback = enable_message_feedback
-        try:
-            self.cosmosdb_client = CosmosClient(self.cosmosdb_endpoint, credential=credential)
-        except exceptions.CosmosHttpResponseError as e:
-            if e.status_code == 401:
-                raise ValueError("Invalid credentials") from e
-            else:
-                raise ValueError("Invalid CosmosDB endpoint") from e
+        
+        self.cosmosdb_factory = cosmosdb_factory
+        
+    
+    # def init_cosmosdb_client(
+    #     self,
+    #     cosmosdb_endpoint: str,
+    #     credential: any,
+    #     database_name: str,
+    #     container_name: str,
+    # ) -> list:
+        
+    #     try:
+    #         cosmosdb = CosmosDB(
+    #                         cosmosdb_endpoint, 
+    #                         credential, 
+    #                         database_name, 
+    #                         container_name, 
+    #                     )
+    #     except Exception as e:
+    #             self.logger.exception("Exception in CosmosDB initialization", e)
+    #             raise e
 
-        try:
-            self.database_client = self.cosmosdb_client.get_database_client(database_name)
-        except exceptions.CosmosResourceNotFoundError:
-            raise ValueError("Invalid CosmosDB database name") 
-        
-        try:
-            self.container_client = self.database_client.get_container_client(container_name)
-        except exceptions.CosmosResourceNotFoundError:
-            raise ValueError("Invalid CosmosDB container name") 
-        
+    #     return [cosmosdb.cosmosdb_client, cosmosdb.database_client, cosmosdb.container_client]
+
 
     async def ensure(self):
         if not self.cosmosdb_client or not self.database_client or not self.container_client:
@@ -45,21 +81,64 @@ class CosmosConversationClient():
             
         return True, "CosmosDB client initialized successfully"
 
-    async def create_conversation(self, user_id, title = ''):
+
+    async def add_conversation(self, user_id: str, title: str, request_json: json):
+        history_metadata = {}
+        async with self.cosmosdb_factory as cosmosdb_client:
+                # check for the conversation_id, if the conversation is not set, we will create a new one
+                
+                conversation_dict = await self.create_conversation(
+                    user_id=user_id, title=title, cosmosdb_client
+                )
+                conversation_id = conversation_dict["id"]
+                history_metadata["title"] = title
+                history_metadata["date"] = conversation_dict["createdAt"]
+                history_metadata["conversation_id"] = conversation_id
+                
+                ## Format the incoming message object in the "chat/completions" messages format
+                ## then write it to the conversation history in cosmos
+                messages = request_json["messages"]
+                if len(messages) > 0 and messages[-1]["role"] == "user":
+                    createdMessageValue = await self.history_repository.create_message(
+                        uuid=str(uuid.uuid4()),
+                        conversation_id=conversation_id,
+                        user_id=user_id,
+                        input_message=messages[-1],
+                    )
+                    if createdMessageValue == "Conversation not found":
+                        raise Exception(
+                            "Conversation not found for the given conversation ID: "
+                            + conversation_id
+                            + "."
+                        )
+                else:
+                    raise Exception("No user message found")
+        
+        return history_metadata
+
+
+
+    async def create_conversation(
+        self, 
+        user_id, 
+        title = '', 
+        cosmosdb_client:CosmosDB=None
+    ):
         conversation = {
             'id': str(uuid.uuid4()),  
             'type': 'conversation',
-            'createdAt': datetime.utcnow().isoformat(),  
-            'updatedAt': datetime.utcnow().isoformat(),  
+            'createdAt': datetime.now().isoformat(),  
+            'updatedAt': datetime.now().isoformat(),  
             'userId': user_id,
             'title': title
         }
         ## TODO: add some error handling based on the output of the upsert_item call
-        resp = await self.container_client.upsert_item(conversation)  
+        resp = await cosmosdb_client.container_client.upsert_item(conversation)  
         if resp:
             return resp
         else:
             return False
+    
     
     async def upsert_conversation(self, conversation):
         resp = await self.container_client.upsert_item(conversation)
@@ -67,6 +146,7 @@ class CosmosConversationClient():
             return resp
         else:
             return False
+
 
     async def delete_conversation(self, user_id, conversation_id):
         conversation = await self.container_client.read_item(item=conversation_id, partition_key=user_id)        
@@ -105,6 +185,7 @@ class CosmosConversationClient():
         
         return conversations
 
+
     async def get_conversation(self, user_id, conversation_id):
         parameters = [
             {
@@ -126,6 +207,7 @@ class CosmosConversationClient():
             return None
         else:
             return conversations[0]
+ 
  
     async def create_message(self, uuid, conversation_id, user_id, input_message: dict):
         message = {
@@ -154,6 +236,7 @@ class CosmosConversationClient():
         else:
             return False
     
+    
     async def update_message_feedback(self, user_id, message_id, feedback):
         message = await self.container_client.read_item(item=message_id, partition_key=user_id)
         if message:
@@ -162,6 +245,7 @@ class CosmosConversationClient():
             return resp
         else:
             return False
+
 
     async def get_messages(self, user_id, conversation_id):
         parameters = [
