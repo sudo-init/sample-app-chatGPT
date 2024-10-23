@@ -1,3 +1,4 @@
+from datetime import datetime
 
 
 class Message:
@@ -7,6 +8,7 @@ class Message:
         self.content = content
         self.user_id = user_id
         self.conversation_id = conversation_id
-        self.created_at = datetime.utcnow().isoformat()
-        self.updated_at = datetime.utcnow().isoformat()
+        self.created_at = datetime.now().isoformat()
+        self.updated_at = datetime.now().isoformat()
         self.feedback = feedback
+        

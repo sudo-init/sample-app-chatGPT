@@ -6,11 +6,12 @@ from quart import Blueprint, request, jsonify
 from backend.src.auth.auth_utils import get_authenticated_user_details
 from backend.src.conversation.conversation_service import ConversationService
 from backend.src.history.history_service import HistoryService
-from backend.src.history.repositories.history_repository import HistoryRepository
+from backend.src.history.history_repository import HistoryRepository
 from backend.src.settings import app_settings
 from backend.src.utils.logger import get_main_logger_name
 
 class HistoryControllers:
+    blueprint: Blueprint
     
     def __init__(
         self, 
@@ -28,7 +29,7 @@ class HistoryControllers:
 
     def _register_routes(self):
         self.blueprint.add_url_rule(
-            '/generate', 'add_conversation', self.add_conversation, methods=['POST']
+            '/create', 'create_conversation_history', self.create_conversation_history, methods=['POST']
         )
         self.blueprint.add_url_rule(
             '/update', 'update_conversation', self.update_conversation, methods=['POST']
@@ -59,14 +60,11 @@ class HistoryControllers:
         )
     
     
-    ## Conversation History API ##
-    # @bp.route("/history/generate", methods=["POST"])
-    async def add_conversation(self):
+    async def create_conversation_history(self):
+        self.history_service.create_conversation_history()
         
-
-
     # @bp.route("/history/update", methods=["POST"])
-    async def update_conversation(self):
+    async def update_conversation_history(self):
         authenticated_user = get_authenticated_user_details(request_headers=request.headers)
         user_id = authenticated_user["user_principal_id"]
 

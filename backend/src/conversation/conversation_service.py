@@ -6,7 +6,7 @@ import httpx
 from quart import (jsonify, request, make_response)
 
 from backend.src.auth.auth_utils import get_authenticated_user_details
-from backend.src.openai.openai_client import OpenAiClient
+from backend.src.infrastructure.api_clients.openai_client import OpenAiClient
 from backend.src.security.ms_defender_utils import get_msdefender_user_json
 from backend.src.settings import app_settings, MS_DEFENDER_ENABLED
 from backend.src.utils.general import (
@@ -26,7 +26,13 @@ class ConversationService:
         self.open_ai_client = open_ai_client
     
     
-    async def conversation(self, ):
+    async def create_conversation(self, ):
+        # 유저 인증
+        
+        # 여기서 대화 api를 생성
+        
+        # history에 남김
+        
         if not request.is_json:
             return jsonify({"error": "request must be json"}), 415
         request_json = await request.get_json()

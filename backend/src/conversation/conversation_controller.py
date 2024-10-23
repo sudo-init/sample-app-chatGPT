@@ -19,5 +19,5 @@ class ConversationController:
 
 
     async def conversation(self, request, headers):
-        return await self.conversation_service.conversation(request, headers)
+        return await self.conversation_service.create_conversation(request, headers)
     

@@ -56,6 +56,10 @@ class App:
         # if not cosmos_conversation_client:
         #         raise Exception("CosmosDB is not configured or not working")
     
+    # async def _connection_test(self):
+    #     try:
+    #         self.app
+    
     
     def get_frontend_settings(self):
         return {

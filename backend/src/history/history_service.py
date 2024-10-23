@@ -5,7 +5,7 @@ from quart import request, jsonify
 
 from backend.src.auth.auth_utils import get_authenticated_user_details
 from backend.src.conversation.conversation_service import ConversationService
-from backend.src.history.repositories.history_repository import HistoryRepository
+from backend.src.history.history_repository import HistoryRepository
 from backend.src.utils.logger import get_main_logger_name
 
 
@@ -21,6 +21,8 @@ class HistoryService:
         
 
     async def add_conversation(self):
+        
+        
         authenticated_user = get_authenticated_user_details(request_headers=request.headers)
         user_id = authenticated_user["user_principal_id"]
 
