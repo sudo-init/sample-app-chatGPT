@@ -88,7 +88,7 @@ class HistoryRepository:
                 # check for the conversation_id, if the conversation is not set, we will create a new one
                 
                 conversation_dict = await self.create_conversation(
-                    user_id=user_id, title=title, cosmosdb_client
+                    # user_id=user_id, title=title, cosmosdb_client
                 )
                 conversation_id = conversation_dict["id"]
                 history_metadata["title"] = title
