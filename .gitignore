@@ -9,3 +9,16 @@ frontend/node_modules
 .azure/
 __pycache__/
 .ipynb_checkpoints/
+
+.env*
+
+.venv
+frontend/node_modules
+.env
+# static
+.azure/
+__pycache__/
+.ipynb_checkpoints/
+
+
+node_modules/
